@@ -4,6 +4,14 @@ import "./lib/usingOraclize.sol";
 import "./lib/SafeMath.sol";
 
 contract CSGOBet is usingOraclize {
+  using SafeMath for uint256;
+
+  //uint countdown=3; // variable to check if all prices are recieved
+  address public owner; //owner _address
+
+  uint public winnerPoolTotal;
+
+  CSGObetControllerInterface internal csgobetControllerInstace;
 
 
     struct match_info{
@@ -11,7 +19,7 @@ contract CSGOBet is usingOraclize {
       bool match_start; // flag to check if match has started
       bool match_end; // flag to check if match has ended
       bool voided_bet; //flag to check if bet has been voided
-      uint32 match_id; // int containing matchid provided by HLTV API via Oraclize
+      uint32 match_id; // int containing matchid provided by HLTV API via Oraclize (First will supply fake match info, then work on Oraclize solution)
       uint32 starting_time; // timestamp of when the match starts
     }
 
@@ -19,13 +27,14 @@ contract CSGOBet is usingOraclize {
       bytes32 team; //team which amount is bet on
       uint amount; //amount bet by Bettor
     }
+
     struct team_info {
       uint160 total; //total coin pool
       uint32 count; //number of bets
-      bytes32 TEAM1; //32byte of matches.TEAM1
+      bytes32 TEAM1; //32byte of matches.TEAM1 (Do we need these statements?)
       bytes32 TEAM2; //32byte of matches.TEAM2
       bool win_check;
-      bytes32 OraclizeID;
+      //bytes32 OraclizeID;
     }
 
     struct voter_info {
@@ -34,25 +43,27 @@ contract CSGOBet is usingOraclize {
       mapping(bytes32=>uint) bets; //array of bets
     }
 
-    mapping (bytes32 => bytes32) oraclizeIndex; //mapping oraclize ids with teams(noideaifweneed)
+//    mapping (bytes32 => bytes32) oraclizeIndex; //mapping oraclize ids with teams(noideaifweneed)
     mapping (bytes32 => team_info) teamIndex; //mapping teams with pool information
     mapping (address => voter_info) voterIndex; //mapping voter address with Bettor information
 
     uint public total_reward; // total reward to be awarded
     uint32 total_bettors;
-    mapping (bytes32 => bool) public winner_team;
+  //  mapping (bytes32 => bool) public winner_team;
 
     //tracking events
-    event newOraclizeQuery(string description);
-    event newPriceTicker(uint price);
+  //  event newOraclizeQuery(string description);
     event Deposit(address _from, uint256 _value, bytes32 _)
+    event Withdraw(address _to, uint256 _value);
 
     // constructor
     function CSGOBet() public payable {
-      oraclize_setProof(proofType_TLSNotary | proofStorage_IPFS);
+    //  oraclize_setProof(proofType_TLSNotary | proofStorage_IPFS);
       owner = msg.sender;
-      oraclize_setCustomGasPrice(30000000000 wei);
-      matches.
+      //oraclize_setCustomGasPrice(30000000000 wei);
+      team.TEAM1 = bytes32("TEAM1");
+      team.TEAM2 = bytes32("TEAM2");
+      csgobetControllerInstace = CSGObetControllerInsterface(owner);
     }
 
     //data access structures
@@ -82,14 +93,16 @@ contract CSGOBet is usingOraclize {
     }
 
     //oraclize callback method
-    function __callback(bytes32 myid, string result, bytes proof) public {
-      require (msg.sender == oraclize_cbAddress());
-      require (!matches.match_end);
+  //  function __callback(bytes32 myid, string result, bytes proof) public {
+    //  require (msg.sender == oraclize_cbAddress());
+    //  require (!matches.match_end);
       // bytes32 team_pointer; //variable to differentiate different callbacks
-      matches.match_start = true;
-      matches.betting_open = false;
-      bettingControllerInstace.remoteBettingClose();
-      team_pointer = oraclizeIndex[myid];
-    }
+    //  matches.match_start = true;
+    //  matches.betting_open = false;
+    //  bettingControllerInstace.remoteBettingClose();
+    //  team_pointer = oraclizeIndex[myid];
+//    }
+
+
 
 }
