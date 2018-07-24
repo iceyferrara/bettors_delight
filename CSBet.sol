@@ -1,5 +1,6 @@
 pragma solidity ^0.4.24;
 //Chris Bergamasco
+//Michael Ferrara
 
 
 contract CSBets {
@@ -9,11 +10,11 @@ contract CSBets {
   //model of a Match
   struct Match{
     uint id; //id of match
-    uint betCountT1; //count of bets on team1
-    uint betCountT2; //count of bets on team2
     string team1;
     string team2;
-    // uint160 betPool; //total pool of bets(necessary?)
+    uint160 t1_pool; //pool for team1 bets
+    uint160 t2_pool; //pool for team2 bets
+    uint160 betPool; //total pool of bets
     bool betsOpen;
   }
   struct Bet {
@@ -30,11 +31,6 @@ contract CSBets {
     mapping(bytes32 => uint) bets; //array of bets
   }
 
-  struct pool_info{
-    uint160 t1_pool; //pool for team1 bets
-    uint160 t2_pool; //pool for team2 bets
-  }
-
 
 
   mapping(uint => Match) public matches;
@@ -49,9 +45,9 @@ contract CSBets {
     owner = msg.sender;
   }
 
-  function startMatch(string _t1, string _t2) onlyOwner {
+  function startMatch(string t1, string t2) onlyOwner {
   matchCount++;
-  matches[matchesCount] = Matches(matchesCount, 0, 0, t1, t2, true);
+  matches[matchesCount] = Matches(matchesCount, t1, t2, 0, 0, 0, true);
   }
 
   function startBet(uint _choice, uint _id) payable bettingOpen public{
@@ -66,12 +62,10 @@ contract CSBets {
 
     if(_choice == 1){
       _teamPicked = Team.TEAM1;
-      matches[_id].betCountT1 += 1;
-      poolIndex[_id].t1_pool += _amount;
+      matches.t1_pool += _amount;
     } else if(_choice == 2){
       _teamPicked = Team.TEAM2;
-      matches[_id].betCountT2 += 1;
-      poolIndex[_id].t2_pool += _amount; 
+      matches.t2_pool += _amount;
     }
 
     bets[msg.sender] = Bet(
