@@ -58,6 +58,7 @@ contract CSBets {
 
     require(msg.value >= 0.01 ether);
     require(_choice == 1 || _choice == 2);
+    require(matches[_id].id != 0);
 
 
     uint256 _amount = msg.value;
@@ -65,12 +66,20 @@ contract CSBets {
 
     if(_choice == 1){
       _teamPicked = Team.TEAM1;
-      bets[msg.sender] = Bet(
-
-        )
+      matches[_id].betCountT1 += 1;
+      poolIndex[_id].t1_pool += _amount;
     } else if(_choice == 2){
       _teamPicked = Team.TEAM2;
+      matches[_id].betCountT2 += 1;
+      poolIndex[_id].t2_pool += _amount; 
     }
+
+    bets[msg.sender] = Bet(
+      _id,
+      _teamPicked,
+      _amount
+    );
+
 
 
   }
