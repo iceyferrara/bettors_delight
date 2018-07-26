@@ -18,11 +18,9 @@ contract CSBets {
     bool betsOpen;
   }
   struct Bet {
-  //  uint id; //id of bet
     uint matchID; //matchID
     Team team;
     uint256 amount;
-  //  uint betCount;
   }
 
   struct bets_info{
@@ -30,8 +28,6 @@ contract CSBets {
     bool rewarded; //flag for doublespend
     mapping(bytes32 => uint) bets; //array of bets
   }
-
-
 
   mapping(uint => Match) public matches;
   mapping(address => Bet) public bets;
@@ -49,11 +45,12 @@ contract CSBets {
   matches[matchCount] = Match(matchCount, t1, t2, 0, 0, 0, true);
   }
 
-  function startBet(uint _choice, uint _id) payable public{
+  function startBet(uint _choice, uint _id) payable public {
 
     require(msg.value >= 0.01 ether);
     require(_choice == 1 || _choice == 2);
     require(matches[_id].id != 0);
+    require(matches[_id].betsOpen == true);
 
 
     uint256 _amount = msg.value;
@@ -66,6 +63,7 @@ contract CSBets {
       _teamPicked = Team.TEAM2;
       matches[_id].t2_pool += _amount;
     }
+    matches[_id].betPool += _amount;
 
     bets[msg.sender] = Bet(
       _id,
@@ -73,6 +71,13 @@ contract CSBets {
       _amount
     );
 
+  }
+
+
+  function endBetting(uint _matchID) onlyOwner {
+    require(matches[_matchID].id != 0);
+    require(matches[_matchID].betsOpen == true);
+    matches[_matchID].betsOpen = false;
   }
 
   modifier onlyOwner {
