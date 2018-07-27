@@ -16,6 +16,7 @@ contract CSBets {
     uint256 t2_pool; //pool for team2 bets
     uint256 betPool; //total pool of bets
     bool betsOpen;
+    Team winner;
   }
   struct Bet {
     uint matchID; //matchID
@@ -42,7 +43,8 @@ contract CSBets {
 
   function startMatch(string t1, string t2) onlyOwner {
   matchCount++;
-  matches[matchCount] = Match(matchCount, t1, t2, 0, 0, 0, true);
+  Team team = Team.NONE;
+  matches[matchCount] = Match(matchCount, t1, t2, 0, 0, 0, true, team);
   }
 
   function startBet(uint _choice, uint _id) payable public {
@@ -78,6 +80,20 @@ contract CSBets {
     require(matches[_matchID].id != 0);
     require(matches[_matchID].betsOpen == true);
     matches[_matchID].betsOpen = false;
+  }
+
+  function pickWinner(uint _matchID, uint _winner) onlyOwner {
+    require(_winner == 1 || _winner == 2);
+    require(matches[_matchID].id != 0);
+    require(matches[_matchID].betsOpen == false);
+    Team winningTeam = Team.NONE;
+    if(_winner == 1) {
+    matches[_matchID].winner = winningTeam;
+    winningTeam = Team.TEAM1;
+    } else {
+      winningTeam = Team.TEAM2;
+      matches[_matchID].winner = winningTeam;
+    }
   }
 
   modifier onlyOwner {
