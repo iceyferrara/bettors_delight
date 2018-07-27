@@ -96,6 +96,22 @@ contract CSBets {
     }
   }
 
+  function calculateResults(uint _matchID) {
+    uint256 bettedAmount = bets[msg.sender].amount;
+    uint256 team1Odds = matches[_matchID].t2_pool / matches[_matchID].t1_pool;
+    uint256 team2Odds = matches[_matchID].t1_pool / matches[_matchID].t2_pool;
+    uint256 winningAmount = 0;
+
+    if(matches[_matchID].winner == Team.TEAM1 && bets[msg.sender].team == Team.TEAM1){
+        winningAmount = team1Odds * bettedAmount;
+        msg.sender.transfer(winningAmount);
+    } else if (matches[_matchID].winner == Team.TEAM2 && bets[msg.sender].team == Team.TEAM2) {
+        winningAmount = team2Odds * bettedAmount;
+        msg.sender.transfer(winningAmount);
+    }
+
+  }
+
   modifier onlyOwner {
     require(owner == msg.sender);
     _;
