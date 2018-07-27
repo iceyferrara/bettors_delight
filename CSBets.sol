@@ -88,8 +88,8 @@ contract CSBets {
     require(matches[_matchID].betsOpen == false);
     Team winningTeam = Team.NONE;
     if(_winner == 1) {
-    matches[_matchID].winner = winningTeam;
     winningTeam = Team.TEAM1;
+    matches[_matchID].winner = winningTeam;
     } else {
       winningTeam = Team.TEAM2;
       matches[_matchID].winner = winningTeam;
@@ -102,11 +102,11 @@ contract CSBets {
     uint256 team2Odds = matches[_matchID].t1_pool / matches[_matchID].t2_pool;
     uint256 winningAmount = 0;
 
-    if(matches[_matchID].winner == Team.TEAM1 && bets[msg.sender].team == Team.TEAM1){
-        winningAmount = team1Odds * bettedAmount;
+    if(matches[_matchID].winner == Team.TEAM1 && bets[msg.sender].team == Team.TEAM1) {
+        winningAmount = team1Odds * bettedAmount + bettedAmount;
         msg.sender.transfer(winningAmount);
     } else if (matches[_matchID].winner == Team.TEAM2 && bets[msg.sender].team == Team.TEAM2) {
-        winningAmount = team2Odds * bettedAmount;
+        winningAmount = team2Odds * bettedAmount + bettedAmount;
         msg.sender.transfer(winningAmount);
     }
 
