@@ -20,4 +20,23 @@ contract("CSBets", function(accounts) {
         assert.notEqual(error.message, "assert.fail()", "TX was not reverted, match was created")
       });
   });
+
+
+  it("Should revert bet when neither team is selected for Bet", function() {
+    return CSBets.deployed()
+      .then(instance => {
+        instance.startMatch("OpTic","EG");
+        return instance.startBet(99,1,{from: web3.eth.accounts[2], value: web3.toWei(3, "ether")});
+      })
+      .then(result => {
+        assert.fail();
+      })
+      .catch(error => {
+        assert.notEqual(error.message, "assert.fail()", "TX was not reverted, match was created")
+      });
+  });
+
+
+
+
 });
