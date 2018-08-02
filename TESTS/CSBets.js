@@ -57,6 +57,16 @@ contract("CSBets", function(accounts) {
     });
   });
 
+  it("Should place a bet on match 1 for 3 ether from account 1", function(){
+    return CSBets.deployed()
+    .then(instance => {
+      return instance.startBet(2,1,{from:bettor1Address, value:web3.toWei(8, "ether")});
+    })
+    .catch(error => {
+      assert.fail("TX not sent, bet not placed.");
+    });
+  });
+
   it("Ending betting for a match should only be done by an owner", function(){
     return CSBets.deployed()
     .then(instance => {
@@ -79,20 +89,28 @@ contract("CSBets", function(accounts) {
   });
 
 
-it("Should fail to let bettor call calculateResults more than once", function(){
-    var csBetsInstance;
-    return CSBets.deployed()
-    .then(instance => {
-      csBetsInstance = instance;
-      csBetsInstance.calculateResults(1, {from:bettor1Address});
-      return csBetsInstance.calculateResults(1, {from:bettor1Address});
-    })
-    .then(result => {
-      assert.fail();
-    })
-    .catch(error => {
-      assert.notEqual(error.message,"assert.fail()","TX was sent, bettor allowed to call calculateResults more than once");
+  it("Should let bettor call calculateResults", function(){
+      return CSBets.deployed()
+        .then(instance => {
+        return instance.calculateResults(1, {from:bettor1Address});
+      })
+      .catch(error => {
+              assert.fail("Transaction reverted, calculateResults not call.");
+      });
     });
-  });
+
+  it("Should fail to let bettor call calculateResults more than once yupppp", function(){
+      return CSBets.deployed()
+      .then(instance => {
+        return instance.calculateResults(1, {from:bettor1Address});
+      })
+      .then(result => {
+        assert.fail();
+      })
+      .catch(error => {
+        assert.notEqual(error.message,"assert.fail()","TX was sent, bettor allowed to call calculateResults more than once");
+      });
+    });
+
 
 });
