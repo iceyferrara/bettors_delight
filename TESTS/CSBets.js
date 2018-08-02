@@ -57,10 +57,10 @@ contract("CSBets", function(accounts) {
     });
   });
 
-  it("Should place a bet on match 1 for 3 ether from account 1", function(){
+  it("Should place a bet on match 1 for 8 ether from account 1", function(){
     return CSBets.deployed()
     .then(instance => {
-      return instance.startBet(2,1,{from:bettor1Address, value:web3.toWei(8, "ether")});
+      return instance.startBet(2,1,{from:bettor3Address, value:web3.toWei(3, "ether")});
     })
     .catch(error => {
       assert.fail("TX not sent, bet not placed.");
@@ -95,11 +95,11 @@ contract("CSBets", function(accounts) {
         return instance.calculateResults(1, {from:bettor1Address});
       })
       .catch(error => {
-              assert.fail("Transaction reverted, calculateResults not call.");
+              assert.fail("Transaction reverted, calculateResults not called.");
       });
     });
 
-  it("Should fail to let bettor call calculateResults more than once yupppp", function(){
+  it("Should fail to let bettor call calculateResults more than once", function(){
       return CSBets.deployed()
       .then(instance => {
         return instance.calculateResults(1, {from:bettor1Address});
