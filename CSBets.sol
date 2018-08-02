@@ -30,6 +30,11 @@ contract CSBets {
     mapping(bytes32 => uint) bets; //array of bets
   }
 
+  //Store accounts that have placed bets. Used to make sure
+  //that users dont call CalculateResults more than once
+  mapping(address => bool) public bettors;
+
+
   mapping(uint => Match) public matches;
   mapping(address => Bet) public bets;
   mapping(uint => bets_info) public payoutIndex;
@@ -88,8 +93,8 @@ contract CSBets {
     require(matches[_matchID].betsOpen == false);
     Team winningTeam = Team.NONE;
     if(_winner == 1) {
-    winningTeam = Team.TEAM1;
-    matches[_matchID].winner = winningTeam;
+      winningTeam = Team.TEAM1;
+      matches[_matchID].winner = winningTeam;
     } else {
       winningTeam = Team.TEAM2;
       matches[_matchID].winner = winningTeam;
@@ -97,19 +102,24 @@ contract CSBets {
   }
 
   function calculateResults(uint _matchID) {
+    //Require that the bettor hasnt called calculateResults anymore
+    require(!bettors[msg.sender]);
+
+    // Record that the bettor has called calculate Results
+    bettors[msg.sender] = true;
+
     uint256 bettedAmount = bets[msg.sender].amount;
     uint256 team1Odds = matches[_matchID].t2_pool / matches[_matchID].t1_pool;
     uint256 team2Odds = matches[_matchID].t1_pool / matches[_matchID].t2_pool;
     uint256 winningAmount = 0;
 
-    if(matches[_matchID].winner == Team.TEAM1 && bets[msg.sender].team == Team.TEAM1) {
+    if(matches[_matchID].winner == Team.TEAM1 && bets[msg.sender].team == Team.TEAM1){
         winningAmount = team1Odds * bettedAmount + bettedAmount;
         msg.sender.transfer(winningAmount);
     } else if (matches[_matchID].winner == Team.TEAM2 && bets[msg.sender].team == Team.TEAM2) {
         winningAmount = team2Odds * bettedAmount + bettedAmount;
         msg.sender.transfer(winningAmount);
     }
-
   }
 
   modifier onlyOwner {
