@@ -61,19 +61,21 @@ struct OraclizeQueries {
   string public secondHalfQuery ="&token=tU9uGM46ds_tXnE6FkW3u9g43EV1HsfuXOBPVNkmPHOBzMDK13Q).0.winner.name";
 
   //Function for distance retrieval
-  function fetchMatchResults(uint _matchID, uint _matchNumber) payable onlyOwner {
-        require(_matchID == matches[_matchNumber].id);
-        bytes32 queryId = oraclize_query("URL",  strConcat(firstHalfQuery, uint2str(_matchID), secondHalfQuery));
-        validIDs[queryId] = OraclizeQueries("");
-        pickWinner(_matchNumber,validIDs[queryId].result);
 
-  }
 
   //constructor
   constructor() public payable {
     owner = msg.sender;
     OAR = OraclizeAddrResolverI(0x6f485c8bf6fc43ea212e93bbf8ce046c7f1cb475);
     oraclize_setProof(proofType_TLSNotary | proofStorage_IPFS);
+  }
+
+  function fetchMatchResults(uint _matchID, uint _matchNumber) payable onlyOwner {
+        require(_matchID == matches[_matchNumber].id);
+        bytes32 queryId = oraclize_query("URL",  strConcat(firstHalfQuery, uint2str(_matchID), secondHalfQuery));
+        validIDs[queryId] = OraclizeQueries("");
+        pickWinner(_matchNumber,validIDs[queryId].result);
+
   }
 
 
