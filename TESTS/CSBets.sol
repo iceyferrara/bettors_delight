@@ -13,6 +13,7 @@ contract CSBets is usingOraclize {
   //model of a Match
   struct Match{
     uint id; //id of match
+    //string theWinner; //String for Json data to pick winner of each specific match
     string team1;
     string team2;
     uint256 t1_pool; //pool for team1 bets
@@ -22,6 +23,7 @@ contract CSBets is usingOraclize {
     bool betsOpen;
     string winner;
   }
+
   struct Bet {
     uint matchID; //matchID
     string team;
@@ -34,6 +36,12 @@ contract CSBets is usingOraclize {
     mapping(bytes32 => uint) bets; //array of bets
   }
 
+
+struct OraclizeQueries {
+    //uint id;
+    string result;
+}
+
   //Store accounts that have placed bets. Used to make sure
   //that users dont call CalculateResults more than once
   mapping(address => bool) public bettors;
@@ -42,34 +50,44 @@ contract CSBets is usingOraclize {
   mapping(uint => Match) public matches;
   mapping(address => Bet) public bets;
   mapping(uint => bets_info) public payoutIndex;
+  mapping(bytes32 => OraclizeQueries) public validIDs;
 
   uint matchCount;
 
   string public jsonData;
-
   bytes32 oraclizeID;
-//constructor
+//  string public testString = "json(https://api.pandascore.co/dota2/matches.json?filter[id]=52365&token=tU9uGM46ds_tXnE6FkW3u9g43EV1HsfuXOBPVNkmPHOBzMDK13Q).0.winner.name";
+  string public firstHalfQuery ="json(https://api.pandascore.co/dota2/matches.json?filter[id]=";
+  string public secondHalfQuery ="&token=tU9uGM46ds_tXnE6FkW3u9g43EV1HsfuXOBPVNkmPHOBzMDK13Q).0.winner.name";
+
+  //Function for distance retrieval
+  function fetchMatchResults(uint _matchID, uint _matchNumber) payable onlyOwner {
+        require(_matchID == matches[_matchNumber].id);
+        bytes32 queryId = oraclize_query("URL",  strConcat(firstHalfQuery, uint2str(_matchID), secondHalfQuery));
+        validIDs[queryId] = OraclizeQueries("");
+        pickWinner(_matchNumber,validIDs[queryId].result);
+
+  }
+
+  //constructor
   constructor() public payable {
     owner = msg.sender;
     OAR = OraclizeAddrResolverI(0x6f485c8bf6fc43ea212e93bbf8ce046c7f1cb475);
     oraclize_setProof(proofType_TLSNotary | proofStorage_IPFS);
   }
 
-  function fetchMatchInfo() onlyOwner payable{
-    oraclizeID = oraclize_query("URL", "json(https://api.pandascore.co/dota2/matches.json?filter[id]=52243&token=tU9uGM46ds_tXnE6FkW3u9g43EV1HsfuXOBPVNkmPHOBzMDK13Q).0.opponents.0.opponent.name");
-  }
 
   function __callback(bytes32 oracleID, string result){
     if(msg.sender != oraclize_cbAddress()) revert();
-    jsonData = result;
-    emit PrintJson(result);
+    require(validIDs[oracleID].result == "");
+    validIDs[oracleID].result = result;
   }
 
 
 
   function startMatch(string t1, string t2) onlyOwner {
   matchCount++;
-  matches[matchCount] = Match(matchCount, t1, t2, 0, 0, 0, 0, true, "none");
+  matches[matchCount] = Match(matchCount, testString, t1, t2, 0, 0, 0, 0, true, "none");
   }
 
 
@@ -131,7 +149,11 @@ contract CSBets is usingOraclize {
       winningTeam = matches[_matchID].team2;
       matches[_matchID].winner = winningTeam;
     }
+
+
+
   }
+
 
   function calculateResults(uint _matchID) {
     //Require that the bettor hasnt called calculateResults anymore
