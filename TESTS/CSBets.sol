@@ -35,11 +35,14 @@ contract CSBets is usingOraclize {
     bool rewarded; //flag for doublespend
     mapping(bytes32 => uint) bets; //array of bets
   }
-
-  struct OraclizeQueries{
-      //uint id;
-      string result;
+/*
+  struct InputToResult{
+    string result;
   }
+
+  struct QueryIDtoQuery{
+    string id;
+  } */
 
   //Store accounts that have placed bets. Used to make sure
   //that users dont call CalculateResults more than once
@@ -48,7 +51,8 @@ contract CSBets is usingOraclize {
   mapping(uint => Match) public matches;
   mapping(address => Bet) public bets;
   mapping(uint => bets_info) public payoutIndex;
-  mapping(bytes32 => OraclizeQueries) public validIDs;
+  mapping(uint => string) public InputToResult;
+  mapping(bytes32 => uint) internal QueryIDtoMatchID;
 
   uint matchCount;
 
@@ -57,7 +61,7 @@ contract CSBets is usingOraclize {
 
   string public testString = "json(https://api.pandascore.co/dota2/matches.json?filter[id]=52365&token=tU9uGM46ds_tXnE6FkW3u9g43EV1HsfuXOBPVNkmPHOBzMDK13Q).0.winner.name";
   string public firstHalfQuery ="json(https://api.pandascore.co/dota2/matches.json?filter[id]=";
-  string public secondHalfQuery ="&token=tU9uGM46ds_tXnE6FkW3u9g43EV1HsfuXOBPVNkmPHOBzMDK13Q).0.winner.name";
+  string public secondHalfQuery ="&token=wzNmqc4OVd4S03FTIJmFFRENM6GaHh4SQh3ZKQNr-JS5RWxAYx4).0.winner.name";
 
   //constructor
   constructor() public payable {
@@ -67,20 +71,22 @@ contract CSBets is usingOraclize {
   }
 
   function fetchMatchResults(uint _matchID) payable onlyOwner {
-        bytes32 queryId = oraclize_query("URL",  strConcat(firstHalfQuery, uint2str(_matchID), secondHalfQuery));
-        validIDs[queryId] = OraclizeQueries("");
-        pickWinner(_matchID, validIDs[queryId].result);
-      }
+    string memory query = strConcat(firstHalfQuery, uint2str(_matchID), secondHalfQuery);
+    bytes32 queryId = oraclize_query("URL", query);
+    QueryIDtoMatchID[queryId] = _matchID;
+}
 
-  function __callback(bytes32 oracleID, string result){
+  function __callback(bytes32 _oracleID, string _result){
     if(msg.sender != oraclize_cbAddress()) revert();
-    require(bytes(validIDs[oracleID].result).length == 0);
-    validIDs[oracleID].result = result;
+    require(QueryIDtoMatchID[_oracleID] != 0);
+    uint Input = QueryIDtoMatchID[_oracleID];
+    InputToResult[Input] = _result;
+    pickWinner(QueryIDtoMatchID[_oracleID], InputToResult[Input]);
+
 }
 
   function startMatch(string t1, string t2, uint matchID) onlyOwner {
-  matchCount++;
-  matches[matchCount] = Match(matchID, testString, t1, t2, 0, 0, 0, 0, true, "none");
+  matches[matchID] = Match(matchID, testString, t1, t2, 0, 0, 0, 0, true, "none");
 }
 
   function startBet(string _choice, uint _id) payable public {
@@ -126,7 +132,7 @@ function endBetting(uint _matchID) onlyOwner {
   matches[_matchID].betsOpen = false;
 }
 
-function pickWinner(uint _matchID, string _winner) onlyOwner {
+function pickWinner(uint _matchID, string _winner) {
   require( compareStrings(_winner, matches[_matchID].team1) == true || compareStrings(_winner, matches[_matchID].team2) == true);
   require(matches[_matchID].id != 0);
   require(matches[_matchID].betsOpen == false);
@@ -140,6 +146,8 @@ function pickWinner(uint _matchID, string _winner) onlyOwner {
     matches[_matchID].winner = winningTeam;
   }
 }
+
+
 
 function calculateResults(uint _matchID) {
   //Require that the bettor hasnt called calculateResults anymore
@@ -166,5 +174,5 @@ function calculateResults(uint _matchID) {
 modifier onlyOwner {
   require(owner == msg.sender);
   _;
-}
+  }
 }
