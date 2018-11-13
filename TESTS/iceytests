@@ -24,6 +24,7 @@ contract CSBets is usingOraclize {
     uint256 house;
     bool betsOpen;
     string winner;
+
     address[] bettorAddress;
   }
 
@@ -41,7 +42,7 @@ contract CSBets is usingOraclize {
   //Store accounts that have placed bets. Used to make sure
   //that users dont call CalculateResults more than once
   mapping(address => bool) public bettors;
-
+  address[] public emptyAddress;
   mapping(uint => Match) public matches;
   mapping(address => Bet) public bets;
   mapping(uint => string) public InputToResult;
@@ -79,7 +80,7 @@ contract CSBets is usingOraclize {
 }
 
   function startMatch(string t1, string t2, uint matchID) onlyOwner {
-  matches[matchID] = Match(matchID, t1, t2, 0, 0, 0, 0, true, "none", push(msg.sender));
+  matches[matchID] = Match(matchID, t1, t2, 0, 0, 0, 0, true, "none", emptyAddress);
 }
 
   function startBet(string _choice, uint _id) payable public {
