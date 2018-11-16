@@ -30,6 +30,7 @@ contract CSBets is usingOraclize {
 
   struct Bet {
     uint matchID; //matchID
+    address bettor;
     string team;
     uint256 amount;
   }
@@ -112,11 +113,12 @@ contract CSBets is usingOraclize {
   }
   matches[_id].betPool += _amount;
 
-  matches[_id].forBettors[msg.sender] = Bet(
+  matches[_id].forBettors.push(Bet(
     _id,
+    msg.sender,
     _teamPicked,
     _amount
-    );
+  ));
 }
 
 function compareStrings (string a, string b) view returns (bool){
