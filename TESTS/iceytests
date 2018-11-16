@@ -24,7 +24,7 @@ contract CSBets is usingOraclize {
     uint256 house;
     bool betsOpen;
     string winner;
-
+    Bet[] forBettors;
     address[] bettorAddress;
   }
 
@@ -47,6 +47,8 @@ contract CSBets is usingOraclize {
   mapping(address => Bet) public bets;
   mapping(uint => string) public InputToResult;
   mapping(bytes32 => uint) internal QueryIDtoMatchID;
+
+  Bet[] public emptyBettors;
 
 
   string public jsonData;
@@ -80,7 +82,7 @@ contract CSBets is usingOraclize {
 }
 
   function startMatch(string t1, string t2, uint matchID) onlyOwner {
-  matches[matchID] = Match(matchID, t1, t2, 0, 0, 0, 0, true, "none", emptyAddress);
+  matches[matchID] = Match(matchID, t1, t2, 0, 0, 0, 0, true, "none", emptyBettors, emptyAddress);
 }
 
   function startBet(string _choice, uint _id) payable public {
@@ -110,7 +112,7 @@ contract CSBets is usingOraclize {
   }
   matches[_id].betPool += _amount;
 
-  bets[msg.sender] = Bet(
+  matches[_id].forBettors[msg.sender] = Bet(
     _id,
     _teamPicked,
     _amount
@@ -137,9 +139,10 @@ function pickWinner(uint _matchID, string result) {
 function calculateResults(uint _matchID) payable onlyOwner {
 
   uint numberOfBettors = matches[_matchID].bettorAddress.length;
-  for(uint i = 0; i < numberOfBettors; i++)
-  {
+  for(uint i = 0; i < numberOfBettors; i++){
+
     if(bets[matches[_matchID].bettorAddress[i]].matchID == _matchID){
+
   uint256 bettedAmount = bets[matches[_matchID].bettorAddress[i]].amount;
   uint256 team1Odds = matches[_matchID].t2_pool / matches[_matchID].t1_pool;
   uint256 team2Odds = matches[_matchID].t1_pool / matches[_matchID].t2_pool;
@@ -153,7 +156,7 @@ function calculateResults(uint _matchID) payable onlyOwner {
       winningAmount = team2Odds * bettedAmount + bettedAmount;
       matches[_matchID].bettorAddress[i].transfer(winningAmount);
   }
-}
+ }
 }
 }
 
