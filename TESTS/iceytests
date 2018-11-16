@@ -24,13 +24,12 @@ contract CSBets is usingOraclize {
     uint256 house;
     bool betsOpen;
     string winner;
-    Bet[] forBettors;
     address[] bettorAddress;
+    mapping(address => Bet) bets;
   }
 
   struct Bet {
     uint matchID; //matchID
-    address bettor;
     string team;
     uint256 amount;
   }
@@ -45,11 +44,10 @@ contract CSBets is usingOraclize {
   mapping(address => bool) public bettors;
   address[] public emptyAddress;
   mapping(uint => Match) public matches;
-  mapping(address => Bet) public bets;
+  //mapping(address => Bet) public bets;
   mapping(uint => string) public InputToResult;
   mapping(bytes32 => uint) internal QueryIDtoMatchID;
 
-  Bet[] public emptyBettors;
 
 
   string public jsonData;
@@ -83,7 +81,7 @@ contract CSBets is usingOraclize {
 }
 
   function startMatch(string t1, string t2, uint matchID) onlyOwner {
-  matches[matchID] = Match(matchID, t1, t2, 0, 0, 0, 0, true, "none", emptyBettors, emptyAddress);
+  matches[matchID] = Match(matchID, t1, t2, 0, 0, 0, 0, true, "none", emptyAddress);
 }
 
   function startBet(string _choice, uint _id) payable public {
@@ -113,12 +111,11 @@ contract CSBets is usingOraclize {
   }
   matches[_id].betPool += _amount;
 
-  matches[_id].forBettors.push(Bet(
+  matches[_id].bets[msg.sender] = Bet(
     _id,
-    msg.sender,
     _teamPicked,
     _amount
-  ));
+    );
 }
 
 function compareStrings (string a, string b) view returns (bool){
@@ -143,23 +140,21 @@ function calculateResults(uint _matchID) payable onlyOwner {
   uint numberOfBettors = matches[_matchID].bettorAddress.length;
   for(uint i = 0; i < numberOfBettors; i++){
 
-    if(bets[matches[_matchID].bettorAddress[i]].matchID == _matchID){
-
-  uint256 bettedAmount = bets[matches[_matchID].bettorAddress[i]].amount;
+  address currentBettor = matches[_matchID].bettorAddress[i];
+  uint256 bettedAmount = matches[_matchID].bets[currentBettor].amount;
   uint256 team1Odds = matches[_matchID].t2_pool / matches[_matchID].t1_pool;
   uint256 team2Odds = matches[_matchID].t1_pool / matches[_matchID].t2_pool;
   uint256 winningAmount = 0;
 
   owner.transfer(matches[_matchID].house);
-  if(compareStrings(matches[_matchID].winner,matches[_matchID].team1) == true && compareStrings(bets[matches[_matchID].bettorAddress[i]].team, matches[_matchID].team1) == true){
+  if(compareStrings(matches[_matchID].winner,matches[_matchID].team1) == true && compareStrings(matches[_matchID].bets[currentBettor].team, matches[_matchID].team1) == true){
       winningAmount = team1Odds * bettedAmount + bettedAmount;
-      matches[_matchID].bettorAddress[i].transfer(winningAmount);
-  } else if (compareStrings(matches[_matchID].winner,matches[_matchID].team2) == true && compareStrings(bets[matches[_matchID].bettorAddress[i]].team, matches[_matchID].team2) == true) {
+      currentBettor.transfer(winningAmount);
+  } else if (compareStrings(matches[_matchID].winner,matches[_matchID].team2) == true && compareStrings(matches[_matchID].bets[currentBettor].team, matches[_matchID].team2) == true) {
       winningAmount = team2Odds * bettedAmount + bettedAmount;
-      matches[_matchID].bettorAddress[i].transfer(winningAmount);
+      currentBettor.transfer(winningAmount);
   }
  }
-}
 }
 
 /*function calculateResults(uint _matchID) {
