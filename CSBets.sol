@@ -61,7 +61,7 @@ contract CSBets is usingOraclize {
     owner = msg.sender;
     OAR = OraclizeAddrResolverI(0x6f485c8bf6fc43ea212e93bbf8ce046c7f1cb475);
     oraclize_setProof(proofType_TLSNotary | proofStorage_IPFS);  //set the proof for Oraclize callback
-  },
+  }
 
   function fetchMatchResults(uint _matchID) payable onlyOwner {
     string memory query = strConcat(firstQuery, matches[_matchID].game, secondQuery,uint2str(_matchID), thirdQuery); //Oraclize Query with  game and matchID as parameters
